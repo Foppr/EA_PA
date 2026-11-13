@@ -11,14 +11,16 @@ budget = 5000
 # To make your results reproducible (not required by the assignment), you could set the random seed by
 np.random.seed(42)
 
-population_size = 50
+pop_size = 50
 mutation_rate = 0.01
 crossover_rate = 0.5
+n_elites = 3
 
 
 def crossover(
         parent_1: np.ndarray,
         parent_2: np.ndarray,
+        dimension
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Create two offspring using uniform crossover."""
     # `crossover_probability` is handled in the main GA loop. Inside
@@ -54,9 +56,9 @@ def mutation(individual: np.ndarray, rate: float) -> np.ndarray:
 
 
 def mating_selection(
-        parents: List[np.ndarray],
-        parent_fitness: List[float],
-) -> List[np.ndarray]:
+        parents: list[np.ndarray],
+        parent_fitness: list[float],
+) -> list[np.ndarray]:
     min_f = min(parent_fitness)
     shifted_fitness = [f - min_f for f in parent_fitness]
     total_f = sum(shifted_fitness)
@@ -67,23 +69,26 @@ def mating_selection(
     else:
         p = [f / total_f for f in shifted_fitness]
 
+    # print(p)
+
     selected_indices = np.random.choice(n_parents, size=n_parents, p=p)
     return [parents[i].copy() for i in selected_indices]
 
 
-def studentnumber1_studentnumber2_GA(problem: ioh.problem.PBO) -> None:
-    initial_pop = [
-            np.random.randint(0, 2, size=population_size, dtype=int)
+def studentnumber1_studentnumber2_GA(problem: ioh.problem.PBO, dimension) -> None:
+    parents = [
+            np.random.randint(0, 2, size=dimension, dtype=int)
             for _ in range(pop_size)
         ]
 
     # Evaluate the initial population and record its best individual.
-    parent_fitness: List[float] = []
+    parent_fitness: list[float] = []
     best_fitness = -np.inf
-    best_individual: Optional[np.ndarray] = None
+    best_individual = None
 
-    for individual in initial_pop:
+    for individual in parents:
         fitness = float(problem(individual))
+        # print(f'Fitness: {fitness}')
         parent_fitness.append(fitness)
 
         if fitness > best_fitness:
@@ -95,13 +100,13 @@ def studentnumber1_studentnumber2_GA(problem: ioh.problem.PBO) -> None:
     # You could also maintain a counter of function evaluations if you prefer.
     while problem.state.evaluations < budget:
         # please implement the mutation, crossover, selection here
-        mating_pool = mating_selection(initial_pop, parent_fitness)
+        mating_pool = mating_selection(parents, parent_fitness)
         if len(mating_pool) != len(parents):
             raise ValueError("mating_selection must preserve the population size.")
 
         # The last generation may be smaller when little budget remains.
-        n_offspring = min(pop_size, budget - problem.state.evaluations)
-        offspring: List[np.ndarray] = []
+        n_offspring = min(pop_size - n_elites, budget - problem.state.evaluations)
+        offspring: list[np.ndarray] = []
         pair_index = 0
 
         while len(offspring) < n_offspring:
@@ -110,8 +115,8 @@ def studentnumber1_studentnumber2_GA(problem: ioh.problem.PBO) -> None:
             parent_1 = np.asarray(mating_pool[first], dtype=int).copy()
             parent_2 = np.asarray(mating_pool[second], dtype=int).copy()
 
-            if np.random.random() < crossover_probability:
-                child_1, child_2 = crossover(parent_1, parent_2)
+            if np.random.random() < crossover_rate:
+                child_1, child_2 = crossover(parent_1, parent_2, dimension)
             else:
                 child_1, child_2 = parent_1.copy(), parent_2.copy()
 
@@ -123,7 +128,7 @@ def studentnumber1_studentnumber2_GA(problem: ioh.problem.PBO) -> None:
 
             pair_index += 1
 
-        offspring_fitness: List[float] = []
+        offspring_fitness: list[float] = []
         for individual in offspring:
             fitness = float(problem(individual))
             offspring_fitness.append(fitness)
@@ -131,6 +136,21 @@ def studentnumber1_studentnumber2_GA(problem: ioh.problem.PBO) -> None:
             if fitness > best_fitness:
                 best_fitness = fitness
                 best_individual = individual.copy()
+
+        # if problem.state.evaluations % 1000 == 0:
+        #     print(f'---- Eval {problem.state.evaluations}: best fitness {best_fitness} ----')
+
+        # print(f'Offspring fitness: {offspring_fitness}')
+
+        # Generational replacement. A shortened final generation is safe
+        # because the evaluation budget is exhausted immediately afterward.
+
+        elite_indices = np.argsort(parent_fitness)[-n_elites:]
+        elites = [parents[i].copy() for i in elite_indices]
+        elite_fitness = [parent_fitness[i] for i in elite_indices]
+
+        parents = elites + offspring
+        parent_fitness = elite_fitness + offspring_fitness
 
 
 def create_problem(dimension: int, fid: int) -> Tuple[ioh.problem.PBO, ioh.logger.Analyzer]:
@@ -154,15 +174,21 @@ def create_problem(dimension: int, fid: int) -> Tuple[ioh.problem.PBO, ioh.logge
 if __name__ == "__main__":
     # this how you run your algorithm with 20 repetitions/independent run
     # create the LABS problem and the data logger
-    F18, _logger = create_problem(dimension=50, fid=18)
-    for run in range(20): 
-        studentnumber1_studentnumber2_GA(F18)
+    dim_f18 = 50
+    F18, _logger = create_problem(dimension=dim_f18, fid=18)
+    print(f'--- F18 ---')
+    for run in range(20):
+        print(f'Run: {run}')
+        studentnumber1_studentnumber2_GA(F18, dim_f18)
         F18.reset() # it is necessary to reset the problem after each independent run
     _logger.close() # after all runs, it is necessary to close the logger to make sure all data are written to the folder
 
     # create the N-Queens problem and the data logger
-    F23, _logger = create_problem(dimension=49, fid=23)
-    for run in range(20): 
-        studentnumber1_studentnumber2_GA(F23)
+    dim_f23 = 49
+    F23, _logger = create_problem(dimension=dim_f23, fid=23)
+    print(f'--- F23 ---')
+    for run in range(20):
+        print(f'Run: {run}')
+        studentnumber1_studentnumber2_GA(F23, dim_f23)
         F23.reset()
     _logger.close()
