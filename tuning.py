@@ -18,6 +18,7 @@ hyperparameter_space = {
     "population_size": [50, 100, 200],
     "mutation_rate": [0.01, 0.05, 0.1],
     "crossover_rate": [0.5, 0.7, 0.9],
+    "n_elites": [3, 6, 10],
 }
 
 
