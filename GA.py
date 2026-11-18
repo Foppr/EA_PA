@@ -6,15 +6,8 @@ import numpy as np
 import ioh
 from ioh import get_problem, logger, ProblemClass
 
-budget = 5000
-
-# To make your results reproducible (not required by the assignment), you could set the random seed by
+# Make results reproducible
 np.random.seed(42)
-
-pop_size = 50
-mutation_rate = 0.01
-crossover_rate = 0.5
-n_elites = 3
 
 
 def crossover(
@@ -75,10 +68,10 @@ def mating_selection(
     return [parents[i].copy() for i in selected_indices]
 
 
-def studentnumber1_studentnumber2_GA(problem: ioh.problem.PBO, dimension) -> None:
+def studentnumber1_studentnumber2_GA(problem: ioh.problem.PBO, dimension, budget=5000, population_size=20, mutation_rate=0.03, crossover_rate=0.5, n_elites=3):
     parents = [
             np.random.randint(0, 2, size=dimension, dtype=int)
-            for _ in range(pop_size)
+            for _ in range(population_size)
         ]
 
     # Evaluate the initial population and record its best individual.
@@ -105,13 +98,13 @@ def studentnumber1_studentnumber2_GA(problem: ioh.problem.PBO, dimension) -> Non
             raise ValueError("mating_selection must preserve the population size.")
 
         # The last generation may be smaller when little budget remains.
-        n_offspring = min(pop_size - n_elites, budget - problem.state.evaluations)
+        n_offspring = min(population_size - n_elites, budget - problem.state.evaluations)
         offspring: list[np.ndarray] = []
         pair_index = 0
 
         while len(offspring) < n_offspring:
-            first = (2 * pair_index) % pop_size
-            second = (first + 1) % pop_size
+            first = (2 * pair_index) % population_size
+            second = (first + 1) % population_size
             parent_1 = np.asarray(mating_pool[first], dtype=int).copy()
             parent_2 = np.asarray(mating_pool[second], dtype=int).copy()
 
@@ -151,6 +144,7 @@ def studentnumber1_studentnumber2_GA(problem: ioh.problem.PBO, dimension) -> Non
 
         parents = elites + offspring
         parent_fitness = elite_fitness + offspring_fitness
+    return best_fitness
 
 
 def create_problem(dimension: int, fid: int) -> Tuple[ioh.problem.PBO, ioh.logger.Analyzer]:
@@ -178,8 +172,8 @@ if __name__ == "__main__":
     F18, _logger = create_problem(dimension=dim_f18, fid=18)
     print(f'--- F18 ---')
     for run in range(20):
-        print(f'Run: {run}')
-        studentnumber1_studentnumber2_GA(F18, dim_f18)
+        best = studentnumber1_studentnumber2_GA(F18, dim_f18)
+        print(f'Run: {run}: {best}')
         F18.reset() # it is necessary to reset the problem after each independent run
     _logger.close() # after all runs, it is necessary to close the logger to make sure all data are written to the folder
 
@@ -188,7 +182,7 @@ if __name__ == "__main__":
     F23, _logger = create_problem(dimension=dim_f23, fid=23)
     print(f'--- F23 ---')
     for run in range(20):
-        print(f'Run: {run}')
-        studentnumber1_studentnumber2_GA(F23, dim_f23)
+        best = studentnumber1_studentnumber2_GA(F23, dim_f23)
+        print(f'Run: {run}: {best}')
         F23.reset()
     _logger.close()
