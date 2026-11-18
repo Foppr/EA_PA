@@ -1,2 +1,4 @@
 numpy
 ioh
+matplotlib
+seaborn
