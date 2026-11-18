@@ -2,6 +2,7 @@ from typing import List
 import ioh
 import numpy as np
 import itertools
+import csv
 from GA import create_problem, studentnumber1_studentnumber2_GA
 
 # you need to install this package `ioh`. Please see documentations here:
@@ -59,6 +60,7 @@ def rank_score(scores):
 
 def successive_halving(configs, F18, F23):
     total_used = 0
+    log_rows = []
     for rung, (n_config, run_budget, n_runs) in enumerate(SCHEDULE):
         configs = configs[:n_config]
         F18_scores = []
@@ -79,11 +81,27 @@ def successive_halving(configs, F18, F23):
         combined = (rank_score(F18_scores) + rank_score(F23_scores)) / 2  # lower is better
         order = np.argsort(combined)
         print(f"Round {rung}: {total_used} evaluations used.") 
-        for i in order:
+        if rung + 1 < len(SCHEDULE):
+            n_next = SCHEDULE[rung + 1][0]
+        else:
+            n_next = 1
+        for pos, i in enumerate(order):
+            log_rows.append({
+                "round": rung,
+                "run_budget": run_budget, 
+                **configs[i],
+                "F18": F18_scores[i], 
+                "F23": F23_scores[i],
+                "avg_rank": combined[i], "kept": pos < n_next
+            })
             print(configs[i], F18_scores[i], F23_scores[i], combined[i])
         
         configs = [configs[i] for i in order]
-    assert total_used <= budget    
+    assert total_used <= budget
+    with open("tuning_results.csv", "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=log_rows[0].keys())
+        writer.writeheader()
+        writer.writerows(log_rows)    
     winner = configs[0]
     return winner
 
