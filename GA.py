@@ -68,7 +68,7 @@ def mating_selection(
     return [parents[i].copy() for i in selected_indices]
 
 
-def studentnumber1_studentnumber2_GA(problem: ioh.problem.PBO, dimension, budget=5000, population_size=20, mutation_rate=0.03, crossover_rate=0.5, n_elites=3):
+def s3331261_s2995387_GA(problem: ioh.problem.PBO, dimension, budget=5000, population_size=20, mutation_rate=0.03, crossover_rate=0.5, n_elites=3):
     parents = [
             np.random.randint(0, 2, size=dimension, dtype=int)
             for _ in range(population_size)
@@ -172,7 +172,7 @@ if __name__ == "__main__":
     F18, _logger = create_problem(dimension=dim_f18, fid=18)
     print(f'--- F18 ---')
     for run in range(20):
-        best = studentnumber1_studentnumber2_GA(F18, dim_f18)
+        best = s3331261_s2995387_GA(F18, dim_f18)
         print(f'Run: {run}: {best}')
         F18.reset() # it is necessary to reset the problem after each independent run
     _logger.close() # after all runs, it is necessary to close the logger to make sure all data are written to the folder
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     F23, _logger = create_problem(dimension=dim_f23, fid=23)
     print(f'--- F23 ---')
     for run in range(20):
-        best = studentnumber1_studentnumber2_GA(F23, dim_f23)
+        best = s3331261_s2995387_GA(F23, dim_f23)
         print(f'Run: {run}: {best}')
         F23.reset()
     _logger.close()

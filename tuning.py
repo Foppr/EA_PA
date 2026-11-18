@@ -3,7 +3,7 @@ import ioh
 import numpy as np
 import itertools
 import csv
-from GA import create_problem, studentnumber1_studentnumber2_GA
+from GA import create_problem, s3331261_s2995387_GA
 
 # you need to install this package `ioh`. Please see documentations here:
 # https://iohprofiler.github.io/IOHexp/ and
@@ -39,7 +39,7 @@ def sample_configs(amount):
 
 def one_run(problem, dimension, params, run_budget, seed):
     np.random.seed(seed)
-    best = studentnumber1_studentnumber2_GA(problem, dimension, budget=run_budget, **params)
+    best = s3331261_s2995387_GA(problem, dimension, budget=run_budget, **params)
     used = problem.state.evaluations
     problem.reset()
     return best, used
